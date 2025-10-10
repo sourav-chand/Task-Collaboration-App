@@ -11,8 +11,14 @@ const ProjectBoard = () => {
   const [showModal, setShowModal] = useState(false);
 
   const { user, logout } = useAuth();
-  const { currentProject, setCurrentProject, tasks, getTasks, getProjects } =
-    useProject();
+  const {
+    projects,
+    currentProject,
+    setCurrentProject,
+    tasks,
+    getTasks,
+    getProjects,
+  } = useProject();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,13 +30,18 @@ const ProjectBoard = () => {
   }, [projectId, getTasks, getProjects]);
 
   useEffect(() => {
-    // In a real app, you would fetch the project details
-    // For now, we'll just set it to null and display the ID
-    setCurrentProject({
-      _id: projectId,
-      name: `Project ${projectId.substring(0, 8)}`,
-    });
-  }, [projectId]); // Removed setCurrentProject from dependencies to prevent infinite loop
+    // Find the actual project from the projects list
+    const project = projects.find((p) => p._id === projectId);
+    if (project) {
+      setCurrentProject(project);
+    } else {
+      // Fallback to the placeholder if project not found
+      setCurrentProject({
+        _id: projectId,
+        name: `Project ${projectId.substring(0, 8)}`,
+      });
+    }
+  }, [projectId, projects, setCurrentProject]);
 
   const handleLogout = () => {
     logout();

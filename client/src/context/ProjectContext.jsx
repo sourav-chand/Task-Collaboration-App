@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import axios from "axios";
 
 const ProjectContext = createContext();
@@ -15,10 +21,10 @@ export const ProjectProvider = ({ children }) => {
   const createProject = useCallback(async (projectData) => {
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/projects",
+        `${import.meta.env.VITE_API_BASE_URL}/api/projects`,
         projectData
       );
-      setProjects(prevProjects => [...prevProjects, res.data]);
+      setProjects((prevProjects) => [...prevProjects, res.data]);
       return { success: true, project: res.data };
     } catch (err) {
       return {
@@ -30,7 +36,9 @@ export const ProjectProvider = ({ children }) => {
 
   const getProjects = useCallback(async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/projects");
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/projects`
+      );
       setProjects(res.data);
       return { success: true, projects: res.data };
     } catch (err) {
@@ -40,8 +48,12 @@ export const ProjectProvider = ({ children }) => {
 
   const deleteProject = useCallback(async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/projects/${id}`);
-      setProjects(prevProjects => prevProjects.filter((project) => project._id !== id));
+      await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/api/projects/${id}`
+      );
+      setProjects((prevProjects) =>
+        prevProjects.filter((project) => project._id !== id)
+      );
       return { success: true };
     } catch (err) {
       return { success: false, error: "Failed to delete project" };
@@ -51,7 +63,7 @@ export const ProjectProvider = ({ children }) => {
   const getTasks = useCallback(async (projectId) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/tasks/${projectId}/tasks`
+        `${import.meta.env.VITE_API_BASE_URL}/api/tasks/${projectId}/tasks`
       );
       setTasks(res.data);
       return { success: true, tasks: res.data };
@@ -63,10 +75,10 @@ export const ProjectProvider = ({ children }) => {
   const createTask = useCallback(async (projectId, taskData) => {
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/tasks/${projectId}/tasks`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/tasks/${projectId}/tasks`,
         taskData
       );
-      setTasks(prevTasks => [...prevTasks, res.data]);
+      setTasks((prevTasks) => [...prevTasks, res.data]);
       return { success: true, task: res.data };
     } catch (err) {
       return {
@@ -79,10 +91,12 @@ export const ProjectProvider = ({ children }) => {
   const updateTask = useCallback(async (taskId, taskData) => {
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/tasks/${taskId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/tasks/${taskId}`,
         taskData
       );
-      setTasks(prevTasks => prevTasks.map((task) => (task._id === taskId ? res.data : task)));
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => (task._id === taskId ? res.data : task))
+      );
       return { success: true, task: res.data };
     } catch (err) {
       return { success: false, error: "Failed to update task" };
@@ -91,8 +105,10 @@ export const ProjectProvider = ({ children }) => {
 
   const deleteTask = useCallback(async (taskId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/tasks/${taskId}`);
-      setTasks(prevTasks => prevTasks.filter((task) => task._id !== taskId));
+      await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/api/tasks/${taskId}`
+      );
+      setTasks((prevTasks) => prevTasks.filter((task) => task._id !== taskId));
       return { success: true };
     } catch (err) {
       return { success: false, error: "Failed to delete task" };
