@@ -15,7 +15,10 @@ import taskRoutes from "./routes/tasks.js";
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'https://task-collaboration-app-sxhh.vercel.app',
+  credentials: true,
+}));
 app.use(express.json());
 
 // MongoDB connection with improved error handling
