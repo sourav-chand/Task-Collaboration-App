@@ -1,29 +1,27 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-const taskSchema = new mongoose.Schema(
+const TaskSchema = new mongoose.Schema(
   {
     title: {
       type: String,
       required: true,
-      trim: true,
     },
     description: {
       type: String,
-      trim: true,
     },
     status: {
       type: String,
       enum: ["To Do", "In Progress", "Done"],
       default: "To Do",
     },
-    assignedTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
     project: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
       required: true,
+    },
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {
@@ -31,4 +29,4 @@ const taskSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Task", taskSchema);
+export default mongoose.model("Task", TaskSchema);

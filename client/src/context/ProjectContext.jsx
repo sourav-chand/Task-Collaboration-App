@@ -77,9 +77,14 @@ export const ProjectProvider = ({ children }) => {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/api/tasks/assigned`
       );
-      return { success: true, tasks: res.data };
+      return { success: true, tasks: res.data || [] };
     } catch (err) {
-      return { success: false, error: "Failed to fetch assigned tasks" };
+      console.error("Error fetching assigned tasks:", err);
+      return {
+        success: false,
+        error: "Failed to fetch assigned tasks",
+        tasks: [],
+      };
     }
   }, []);
 
@@ -94,7 +99,10 @@ export const ProjectProvider = ({ children }) => {
     } catch (err) {
       return {
         success: false,
-        error: err.response?.data?.errors || "Failed to create task",
+        error:
+          err.response?.data?.msg ||
+          err.response?.data?.errors ||
+          "Failed to create task",
       };
     }
   }, []);
@@ -110,7 +118,10 @@ export const ProjectProvider = ({ children }) => {
       );
       return { success: true, task: res.data };
     } catch (err) {
-      return { success: false, error: "Failed to update task" };
+      return {
+        success: false,
+        error: err.response?.data?.msg || "Failed to update task",
+      };
     }
   }, []);
 

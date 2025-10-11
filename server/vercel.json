@@ -1,18 +1,20 @@
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/vercel-entry.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["**"]
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "api/vercel-entry.js"
-    }
-  ]
+  {
+    "version": 2,
+    "builds": [
+        {
+            "src": "server.js",
+            "use": "@vercel/node",
+            "config": {
+                "includeFiles": [
+                    "dist/**"
+                ]
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "server.js"
+        }
+    ]
 }

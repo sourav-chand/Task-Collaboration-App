@@ -1,26 +1,18 @@
-const express = require("express");
-const { body, validationResult } = require("express-validator");
-const auth = require("../middleware/auth");
-const Task = require("../models/Task");
-const Project = require("../models/Project");
-const mongoose = require("mongoose");
+import express from "express";
+import { check, validationResult } from "express-validator";
+import auth from "../middleware/auth.js";
+import Task from "../models/Task.js";
+import Project from "../models/Project.js";
+import User from "../models/User.js";
 
 const router = express.Router();
 
-// Middleware to check database connection
-const checkDBConnection = (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({ msg: "Database connection not ready" });
-  }
-  next();
-};
-
-// @route   POST /api/projects/:id/tasks
-// @desc    Create a new task for a project
-// @access  Private
+// @route    POST api/tasks/:project_id/tasks
+// @desc     Create a task
+// @access   Private
 router.post(
   "/:project_id/tasks",
-  [checkDBConnection, auth, [body("title", "Title is required").notEmpty()]],
+  [auth, [check("title", "Title is required").not().isEmpty()]],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -30,48 +22,53 @@ router.post(
     try {
       const project = await Project.findById(req.params.project_id);
 
+      // Check if project exists
       if (!project) {
         return res.status(404).json({ msg: "Project not found" });
       }
 
-      // Check if user is part of the project
-      if (!project.members.includes(req.user.id)) {
+      // Check if user is member of the project
+      if (
+        !project.members.some((member) => member.toString() === req.user.id)
+      ) {
         return res.status(401).json({ msg: "User not authorized" });
       }
 
-      const { title, description, assignedTo, status } = req.body;
-
-      // Validate assignedTo is a member of the project if provided
-      if (assignedTo) {
-        const isMember = project.members.some(
-          (member) => member.toString() === assignedTo
-        );
-        if (!isMember) {
+      // Validate assignedTo user if provided
+      let assignedTo = null;
+      if (req.body.assignedTo) {
+        const user = await User.findById(req.body.assignedTo);
+        if (!user) {
+          return res.status(404).json({ msg: "Assigned user not found" });
+        }
+        // Check if assigned user is a member of the project
+        if (
+          !project.members.some(
+            (member) => member.toString() === req.body.assignedTo
+          )
+        ) {
           return res
             .status(400)
-            .json({ msg: "Assigned user must be a project member" });
+            .json({ msg: "Assigned user is not a member of this project" });
         }
+        assignedTo = req.body.assignedTo;
       }
 
-      // Handle empty assignedTo
-      const assignedToValue =
-        assignedTo && assignedTo.trim() !== "" ? assignedTo : undefined;
-
-      const task = new Task({
-        title,
-        description,
-        assignedTo: assignedToValue,
-        status: status || "To Do",
+      const newTask = new Task({
+        title: req.body.title,
+        description: req.body.description,
+        status: req.body.status,
         project: req.params.project_id,
+        assignedTo: assignedTo,
       });
 
-      const savedTask = await task.save();
+      const task = await newTask.save();
 
-      // Populate assignedTo and project details
-      await savedTask.populate("assignedTo", "name");
-      await savedTask.populate("project", "name");
+      // Populate related fields
+      await task.populate("assignedTo", "name");
+      await task.populate("project", "name");
 
-      res.json(savedTask);
+      res.json(task);
     } catch (err) {
       console.error(err.message);
       if (err.kind === "ObjectId") {
@@ -82,56 +79,47 @@ router.post(
   }
 );
 
-// @route   GET /api/projects/:project_id/tasks
-// @desc    Get all tasks for a project
-// @access  Private
-router.get(
-  "/:project_id/tasks",
-  [checkDBConnection, auth],
-  async (req, res) => {
-    try {
-      const project = await Project.findById(req.params.project_id);
+// @route    GET api/tasks/:project_id/tasks
+// @desc     Get all tasks for a project
+// @access   Private
+router.get("/:project_id/tasks", auth, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.project_id);
 
-      if (!project) {
-        return res.status(404).json({ msg: "Project not found" });
-      }
-
-      // Check if user is part of the project or has assigned tasks in this project
-      const isProjectMember = project.members.includes(req.user.id);
-      const hasAssignedTasks = await Task.exists({
-        project: req.params.project_id,
-        assignedTo: req.user.id,
-      });
-
-      if (!isProjectMember && !hasAssignedTasks) {
-        return res.status(401).json({ msg: "User not authorized" });
-      }
-
-      const tasks = await Task.find({ project: req.params.project_id })
-        .populate("assignedTo", "name")
-        .populate("project", "name")
-        .sort({ date: -1 });
-
-      res.json(tasks);
-    } catch (err) {
-      console.error(err.message);
-      if (err.kind === "ObjectId") {
-        return res.status(404).json({ msg: "Project not found" });
-      }
-      res.status(500).send("Server error");
+    // Check if project exists
+    if (!project) {
+      return res.status(404).json({ msg: "Project not found" });
     }
-  }
-);
 
-// @route   GET /api/tasks/assigned
-// @desc    Get all tasks assigned to the authenticated user
-// @access  Private
-router.get("/assigned", [checkDBConnection, auth], async (req, res) => {
+    // Check if user is member of the project
+    if (!project.members.some((member) => member.toString() === req.user.id)) {
+      return res.status(401).json({ msg: "User not authorized" });
+    }
+
+    const tasks = await Task.find({ project: req.params.project_id })
+      .populate("assignedTo", "name")
+      .populate("project", "name")
+      .sort({ createdAt: -1 });
+
+    res.json(tasks);
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind === "ObjectId") {
+      return res.status(404).json({ msg: "Project not found" });
+    }
+    res.status(500).send("Server error");
+  }
+});
+
+// @route    GET api/tasks/assigned
+// @desc     Get all tasks assigned to the user
+// @access   Private
+router.get("/assigned", auth, async (req, res) => {
   try {
     const tasks = await Task.find({ assignedTo: req.user.id })
       .populate("assignedTo", "name")
       .populate("project", "name")
-      .sort({ date: -1 });
+      .sort({ createdAt: -1 });
 
     res.json(tasks);
   } catch (err) {
@@ -140,64 +128,61 @@ router.get("/assigned", [checkDBConnection, auth], async (req, res) => {
   }
 });
 
-// @route   PUT /api/tasks/:id
-// @desc    Update a task
-// @access  Private
-router.put("/:id", [checkDBConnection, auth], async (req, res) => {
+// @route    PUT api/tasks/:id
+// @desc     Update a task
+// @access   Private
+router.put("/:id", auth, async (req, res) => {
   try {
-    const { title, description, assignedTo, status } = req.body;
+    const task = await Task.findById(req.params.id);
 
-    // Build task object
-    const taskFields = {};
-    if (title) taskFields.title = title;
-    if (description) taskFields.description = description;
-    if (status) taskFields.status = status;
-
-    // Handle assignedTo field
-    if (assignedTo !== undefined) {
-      taskFields.assignedTo =
-        assignedTo && assignedTo.trim() !== "" ? assignedTo : undefined;
-    }
-
-    let task = await Task.findById(req.params.id);
-
+    // Check if task exists
     if (!task) {
       return res.status(404).json({ msg: "Task not found" });
     }
 
-    // Check if user is part of the project or is assigned to the task
+    // Check if user is member of the project
     const project = await Project.findById(task.project);
-    const isProjectMember = project.members.includes(req.user.id);
-    const isAssignedToTask =
-      task.assignedTo && task.assignedTo.toString() === req.user.id;
-
-    if (!isProjectMember && !isAssignedToTask) {
+    if (!project.members.some((member) => member.toString() === req.user.id)) {
       return res.status(401).json({ msg: "User not authorized" });
     }
 
-    // Validate assignedTo is a member of the project if provided
-    if (assignedTo) {
-      const isMember = project.members.some(
-        (member) => member.toString() === assignedTo
-      );
-      if (!isMember) {
-        return res
-          .status(400)
-          .json({ msg: "Assigned user must be a project member" });
+    const { title, description, status, assignedTo } = req.body;
+
+    // Update task fields
+    if (title) task.title = title;
+    if (description) task.description = description;
+    if (status) task.status = status;
+
+    // Handle assignedTo update
+    if (assignedTo !== undefined) {
+      if (assignedTo === "" || assignedTo === null) {
+        // Unassign task
+        task.assignedTo = null;
+      } else {
+        // Validate assigned user
+        const user = await User.findById(assignedTo);
+        if (!user) {
+          return res.status(404).json({ msg: "Assigned user not found" });
+        }
+        // Check if assigned user is a member of the project
+        if (
+          !project.members.some((member) => member.toString() === assignedTo)
+        ) {
+          return res
+            .status(400)
+            .json({ msg: "Assigned user is not a member of this project" });
+        }
+        task.assignedTo = assignedTo;
       }
     }
 
-    task = await Task.findByIdAndUpdate(
-      req.params.id,
-      { $set: taskFields },
-      { new: true }
-    );
+    const updatedTask = await task.save();
 
-    // Populate assignedTo and project details
-    await task.populate("assignedTo", "name");
-    await task.populate("project", "name");
+    // Populate related fields
+    await updatedTask.populate("assignedTo", "name");
+    await updatedTask.populate("project", "name");
 
-    res.json(task);
+    res.json(updatedTask);
   } catch (err) {
     console.error(err.message);
     if (err.kind === "ObjectId") {
@@ -207,29 +192,25 @@ router.put("/:id", [checkDBConnection, auth], async (req, res) => {
   }
 });
 
-// @route   DELETE /api/tasks/:id
-// @desc    Delete a task
-// @access  Private
-router.delete("/:id", [checkDBConnection, auth], async (req, res) => {
+// @route    DELETE api/tasks/:id
+// @desc     Delete a task
+// @access   Private
+router.delete("/:id", auth, async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
 
+    // Check if task exists
     if (!task) {
       return res.status(404).json({ msg: "Task not found" });
     }
 
-    // Check if user is part of the project or is assigned to the task
+    // Check if user is member of the project
     const project = await Project.findById(task.project);
-    const isProjectMember = project.members.includes(req.user.id);
-    const isAssignedToTask =
-      task.assignedTo && task.assignedTo.toString() === req.user.id;
-    const isProjectOwner = project.owner.toString() === req.user.id;
-
-    if (!isProjectMember && !isAssignedToTask && !isProjectOwner) {
+    if (!project.members.some((member) => member.toString() === req.user.id)) {
       return res.status(401).json({ msg: "User not authorized" });
     }
 
-    await task.remove();
+    await Task.findByIdAndDelete(req.params.id);
 
     res.json({ msg: "Task removed" });
   } catch (err) {
@@ -241,4 +222,4 @@ router.delete("/:id", [checkDBConnection, auth], async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

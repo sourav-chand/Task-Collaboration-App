@@ -23,7 +23,7 @@ const Dashboard = () => {
         await getProjects();
         const taskResult = await getAssignedTasks();
         if (taskResult.success) {
-          setAssignedTasks(taskResult.tasks);
+          setAssignedTasks(taskResult.tasks || []);
         }
       }
     };

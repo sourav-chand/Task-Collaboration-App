@@ -35,10 +35,19 @@ const CreateTaskModal = ({ projectId, onClose }) => {
       return;
     }
 
-    const result = await createTask(projectId, {
-      ...formData,
-      assignedTo: formData.assignedTo || undefined,
-    });
+    // Prepare task data
+    const taskData = {
+      title,
+      description,
+      status,
+    };
+
+    // Only include assignedTo if a user is selected
+    if (formData.assignedTo) {
+      taskData.assignedTo = formData.assignedTo;
+    }
+
+    const result = await createTask(projectId, taskData);
 
     if (result.success) {
       onClose();
