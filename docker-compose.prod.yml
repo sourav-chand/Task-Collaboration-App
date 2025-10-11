@@ -24,7 +24,6 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - NODE_ENV=production
       - MONGO_URI=mongodb://admin:password@mongodb:27017/taskcollab?authSource=admin
       - JWT_SECRET=your_jwt_secret_key_here
       - PORT=5000

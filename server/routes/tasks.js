@@ -3,15 +3,24 @@ const { body, validationResult } = require("express-validator");
 const auth = require("../middleware/auth");
 const Task = require("../models/Task");
 const Project = require("../models/Project");
+const mongoose = require("mongoose");
 
 const router = express.Router();
+
+// Middleware to check database connection
+const checkDBConnection = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ msg: "Database connection not ready" });
+  }
+  next();
+};
 
 // @route   POST /api/projects/:id/tasks
 // @desc    Create a new task for a project
 // @access  Private
 router.post(
   "/:project_id/tasks",
-  [auth, [body("title", "Title is required").notEmpty()]],
+  [checkDBConnection, auth, [body("title", "Title is required").notEmpty()]],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -76,44 +85,48 @@ router.post(
 // @route   GET /api/projects/:project_id/tasks
 // @desc    Get all tasks for a project
 // @access  Private
-router.get("/:project_id/tasks", auth, async (req, res) => {
-  try {
-    const project = await Project.findById(req.params.project_id);
+router.get(
+  "/:project_id/tasks",
+  [checkDBConnection, auth],
+  async (req, res) => {
+    try {
+      const project = await Project.findById(req.params.project_id);
 
-    if (!project) {
-      return res.status(404).json({ msg: "Project not found" });
+      if (!project) {
+        return res.status(404).json({ msg: "Project not found" });
+      }
+
+      // Check if user is part of the project or has assigned tasks in this project
+      const isProjectMember = project.members.includes(req.user.id);
+      const hasAssignedTasks = await Task.exists({
+        project: req.params.project_id,
+        assignedTo: req.user.id,
+      });
+
+      if (!isProjectMember && !hasAssignedTasks) {
+        return res.status(401).json({ msg: "User not authorized" });
+      }
+
+      const tasks = await Task.find({ project: req.params.project_id })
+        .populate("assignedTo", "name")
+        .populate("project", "name")
+        .sort({ date: -1 });
+
+      res.json(tasks);
+    } catch (err) {
+      console.error(err.message);
+      if (err.kind === "ObjectId") {
+        return res.status(404).json({ msg: "Project not found" });
+      }
+      res.status(500).send("Server error");
     }
-
-    // Check if user is part of the project or has assigned tasks in this project
-    const isProjectMember = project.members.includes(req.user.id);
-    const hasAssignedTasks = await Task.exists({
-      project: req.params.project_id,
-      assignedTo: req.user.id,
-    });
-
-    if (!isProjectMember && !hasAssignedTasks) {
-      return res.status(401).json({ msg: "User not authorized" });
-    }
-
-    const tasks = await Task.find({ project: req.params.project_id })
-      .populate("assignedTo", "name")
-      .populate("project", "name")
-      .sort({ date: -1 });
-
-    res.json(tasks);
-  } catch (err) {
-    console.error(err.message);
-    if (err.kind === "ObjectId") {
-      return res.status(404).json({ msg: "Project not found" });
-    }
-    res.status(500).send("Server error");
   }
-});
+);
 
 // @route   GET /api/tasks/assigned
 // @desc    Get all tasks assigned to the authenticated user
 // @access  Private
-router.get("/assigned", auth, async (req, res) => {
+router.get("/assigned", [checkDBConnection, auth], async (req, res) => {
   try {
     const tasks = await Task.find({ assignedTo: req.user.id })
       .populate("assignedTo", "name")
@@ -130,7 +143,7 @@ router.get("/assigned", auth, async (req, res) => {
 // @route   PUT /api/tasks/:id
 // @desc    Update a task
 // @access  Private
-router.put("/:id", auth, async (req, res) => {
+router.put("/:id", [checkDBConnection, auth], async (req, res) => {
   try {
     const { title, description, assignedTo, status } = req.body;
 
@@ -197,7 +210,7 @@ router.put("/:id", auth, async (req, res) => {
 // @route   DELETE /api/tasks/:id
 // @desc    Delete a task
 // @access  Private
-router.delete("/:id", auth, async (req, res) => {
+router.delete("/:id", [checkDBConnection, auth], async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
 

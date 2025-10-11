@@ -3,15 +3,24 @@ const { body, validationResult } = require("express-validator");
 const auth = require("../middleware/auth");
 const Project = require("../models/Project");
 const Task = require("../models/Task");
+const mongoose = require("mongoose");
 
 const router = express.Router();
+
+// Middleware to check database connection
+const checkDBConnection = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ msg: "Database connection not ready" });
+  }
+  next();
+};
 
 // @route   POST /api/projects
 // @desc    Create a new project
 // @access  Private
 router.post(
   "/",
-  [auth, [body("name", "Name is required").notEmpty()]],
+  [checkDBConnection, auth, [body("name", "Name is required").notEmpty()]],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -44,7 +53,7 @@ router.post(
 // @route   GET /api/projects
 // @desc    Get all projects for the authenticated user
 // @access  Private
-router.get("/", auth, async (req, res) => {
+router.get("/", [checkDBConnection, auth], async (req, res) => {
   try {
     // Find projects where user is owner, member, or has assigned tasks
     const projectsWithAssignedTasks = await Task.find({
@@ -72,7 +81,7 @@ router.get("/", auth, async (req, res) => {
 // @route   DELETE /api/projects/:id
 // @desc    Delete a project
 // @access  Private
-router.delete("/:id", auth, async (req, res) => {
+router.delete("/:id", [checkDBConnection, auth], async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
 

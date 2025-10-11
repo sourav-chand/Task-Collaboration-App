@@ -3,8 +3,17 @@ const { body, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const auth = require("../middleware/auth");
+const mongoose = require("mongoose");
 
 const router = express.Router();
+
+// Middleware to check database connection
+const checkDBConnection = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ msg: "Database connection not ready" });
+  }
+  next();
+};
 
 // @route   POST /api/auth/register
 // @desc    Register user
@@ -12,6 +21,7 @@ const router = express.Router();
 router.post(
   "/register",
   [
+    checkDBConnection,
     body("name", "Name is required").notEmpty(),
     body("email", "Please include a valid email").isEmail(),
     body(
@@ -75,6 +85,7 @@ router.post(
 router.post(
   "/login",
   [
+    checkDBConnection,
     body("email", "Please include a valid email").isEmail(),
     body("password", "Password is required").exists(),
   ],
@@ -129,7 +140,7 @@ router.post(
 // @route   GET /api/auth/user
 // @desc    Get user by token
 // @access  Private
-router.get("/user", auth, async (req, res) => {
+router.get("/user", [checkDBConnection, auth], async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
     res.json(user);

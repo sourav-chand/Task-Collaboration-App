@@ -1,7 +1,13 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const mongoose = require("mongoose");
 
 module.exports = async function (req, res, next) {
+  // Check if database connection is ready
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ msg: "Database connection not ready" });
+  }
+
   // Get token from header
   const token = req.header("x-auth-token");
 

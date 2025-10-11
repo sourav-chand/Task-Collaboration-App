@@ -1,55 +1,57 @@
-# Server Deployment Guide
+# Task Collaboration App - Server
 
-## Deploying to Vercel
+## Description
 
-This server application can be deployed to Vercel as a serverless application.
+This is the backend API for the Task Collaboration App, built with Node.js, Express, and MongoDB.
 
-### Prerequisites
+## Technologies Used
 
-1. A Vercel account
-2. MongoDB database (MongoDB Atlas recommended)
+- Node.js
+- Express.js
+- MongoDB with Mongoose
+- JSON Web Tokens (JWT) for authentication
+- Bcrypt.js for password hashing
 
-### Steps to Deploy
+## Environment Variables
 
-1. Push your code to a Git repository (GitHub, GitLab, or Bitbucket)
+To run this project, you will need to add the following environment variables to your .env file:
 
-2. Log in to your Vercel account and create a new project
+- `MONGO_URI`: Your MongoDB connection string
+- `JWT_SECRET`: Your secret key for JWT
+- `PORT`: The port number for the server (default is 5000)
 
-3. Import your Git repository
+## Installation
 
-4. Configure the project:
+1. Clone the repository
+2. Navigate to the server directory: `cd server`
+3. Install dependencies: `npm install`
+4. Create a `.env` file and add your environment variables
+5. Start the server: `npm start` or `npm run dev` for development
 
-   - Set the **Build and Output Settings**:
-     - Build Command: `npm install`
-     - Output Directory: (Leave empty)
-     - Install Command: `npm install`
+## Available Scripts
 
-5. Add environment variables in the Vercel dashboard:
+- `npm start`: Start the server in production mode
+- `npm run dev`: Start the server in development mode with nodemon
+- `npm test`: Run tests (if any)
 
-   - `MONGO_URI`: Your MongoDB connection string
-   - `JWT_SECRET`: Your JWT secret key
-   - `NODE_ENV`: production
+## API Endpoints
 
-6. Deploy the project
+### Authentication
 
-### Environment Variables
+- `POST /api/auth/register`: Register a new user
+- `POST /api/auth/login`: Login and get a token
+- `GET /api/auth/user`: Get authenticated user details
 
-Make sure to set these environment variables in your Vercel project settings:
+### Projects
 
-```
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_key
-NODE_ENV=production
-```
+- `POST /api/projects`: Create a new project
+- `GET /api/projects`: Get all projects for the authenticated user
+- `DELETE /api/projects/:id`: Delete a project
 
-### Notes
+### Tasks
 
-- The server uses the [api/index.js](file:///C:/Users/Sourav%20Chand/Desktop/project%20management/server/api/index.js) file as the entry point for Vercel deployment
-- Socket.io functionality may not work in serverless environments. Consider using a traditional hosting solution if real-time features are essential
-- Database connections are managed automatically by Vercel's serverless environment
-
-### Limitations
-
-- Serverless functions have a timeout limit (typically 10-60 seconds)
-- WebSocket connections (used by Socket.io) are not persistent in serverless environments
-- Long-running processes are not suitable for serverless deployment
+- `POST /api/projects/:project_id/tasks`: Create a new task for a project
+- `GET /api/projects/:project_id/tasks`: Get all tasks for a project
+- `GET /api/tasks/assigned`: Get all tasks assigned to the authenticated user
+- `PUT /api/tasks/:id`: Update a task
+- `DELETE /api/tasks/:id`: Delete a task

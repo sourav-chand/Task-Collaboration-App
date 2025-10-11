@@ -46,21 +46,4 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Add connection state logging
-mongoose.connection.on("connecting", () => {
-  console.log("MongoDB connecting...");
-});
-
-mongoose.connection.on("connected", () => {
-  console.log("MongoDB connected successfully");
-});
-
-mongoose.connection.on("disconnected", () => {
-  console.log("MongoDB disconnected");
-});
-
-mongoose.connection.on("reconnected", () => {
-  console.log("MongoDB reconnected");
-});
-
 module.exports = mongoose.model("User", userSchema);

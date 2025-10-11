@@ -8,7 +8,6 @@ A full-stack Task Collaboration App built with the MERN stack (MongoDB, Express.
 - **Backend**: Node.js + Express.js
 - **Database**: MongoDB with Mongoose
 - **Authentication**: JWT + bcrypt
-- **Real-time**: Socket.io
 
 ## 🎯 Features
 
@@ -29,11 +28,6 @@ A full-stack Task Collaboration App built with the MERN stack (MongoDB, Express.
 - Add, update, and delete tasks
 - Kanban-style board with drag-and-drop
 - Task status: To Do, In Progress, Done
-
-### ⚡ Real-Time Collaboration (Bonus)
-
-- Socket.io for real-time updates
-- Live task creation and status changes
 
 ## 🚀 Setup Instructions
 
@@ -114,10 +108,7 @@ The server can also be deployed to Vercel as a serverless application:
 3. Set the environment variables in Vercel dashboard:
    - `MONGO_URI`: Your MongoDB connection string
    - `JWT_SECRET`: Your JWT secret key
-   - `NODE_ENV`: production
 4. Deploy the project
-
-Note: Socket.io functionality may not work in serverless environments. For full real-time features, use the Docker deployment.
 
 ### Project Structure
 
@@ -139,12 +130,6 @@ task-collaboration-app/
 │   └── ...
 └── ...
 ```
-
-## 🎁 Bonus Features
-
-- Real-time updates with Socket.io
-- Responsive design with Tailwind CSS
-- Clean, modern UI/UX
 
 ## 📝 API Endpoints
 
