@@ -17,9 +17,9 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: ["https://task-collaboration-app-sxhh.vercel.app"], // your frontend URL
+    origin: "*", // Allow all origins
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true, // if you're using cookies or authentication headers
+    credentials: false, // Must be false when using origin: "*"
   })
 );
 app.use(express.json());
