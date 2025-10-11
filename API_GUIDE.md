@@ -148,12 +148,19 @@ http://localhost:5000
 ### 7. Create Task
 
 - **Method**: POST
-- **URL**: `/api/projects/:project_id/tasks`
+- **URL**: `/api/tasks/:project_id/tasks`
 - **Headers**:
   - Content-Type: application/json
   - x-auth-token: [YOUR_JWT_TOKEN]
 - **Body** (raw JSON):
 
+```json
+{
+  "title": "Complete documentation",
+  "description": "Write comprehensive documentation for the project",
+  "status": "To Do",
+  "assignedTo": "5f9d88d3f3b4b50017b4b4b4"
+}
 ```json
 {
   "title": "Complete documentation",
@@ -187,7 +194,7 @@ http://localhost:5000
 ### 8. Get All Tasks for a Project
 
 - **Method**: GET
-- **URL**: `/api/projects/:project_id/tasks`
+- **URL**: `/api/tasks/:project_id/tasks`
 - **Headers**:
   - x-auth-token: [YOUR_JWT_TOKEN]
 - **Response**:
