@@ -41,6 +41,7 @@ A full-stack Task Collaboration App built with the MERN stack (MongoDB, Express.
 
 - Node.js (v14 or higher)
 - MongoDB database (local or cloud)
+- Docker and Docker Compose (for containerized deployment)
 
 ### Installation
 
@@ -54,9 +55,6 @@ A full-stack Task Collaboration App built with the MERN stack (MongoDB, Express.
 2. **Install dependencies**
 
    ```bash
-   # Install root dependencies
-   npm install
-
    # Install server dependencies
    cd server
    npm install
@@ -86,6 +84,41 @@ A full-stack Task Collaboration App built with the MERN stack (MongoDB, Express.
    npm run client  # Frontend
    ```
 
+### Docker Deployment
+
+This application includes Docker configuration for containerized deployment:
+
+1. **Development Mode**
+
+   ```bash
+   docker-compose up --build
+   ```
+
+2. **Production Mode**
+   ```bash
+   docker-compose -f docker-compose.prod.yml up --build
+   ```
+
+The Docker setup includes:
+
+- MongoDB service
+- Node.js server application
+- React/Vite client application
+
+### Vercel Deployment
+
+The server can also be deployed to Vercel as a serverless application:
+
+1. Push your code to a Git repository
+2. Import the repository to Vercel
+3. Set the environment variables in Vercel dashboard:
+   - `MONGO_URI`: Your MongoDB connection string
+   - `JWT_SECRET`: Your JWT secret key
+   - `NODE_ENV`: production
+4. Deploy the project
+
+Note: Socket.io functionality may not work in serverless environments. For full real-time features, use the Docker deployment.
+
 ### Project Structure
 
 ```
@@ -99,6 +132,7 @@ task-collaboration-app/
 │   │   └── ...
 │   └── ...
 ├── server/              # Node.js backend
+│   ├── api/             # Vercel serverless entry point
 │   ├── models/          # Mongoose models
 │   ├── routes/          # API routes
 │   ├── middleware/      # Custom middleware
@@ -131,4 +165,3 @@ task-collaboration-app/
 - `GET /api/tasks/:id/tasks` - Get all tasks for a project
 - `PUT /api/tasks/:id` - Update a task
 - `DELETE /api/tasks/:id` - Delete a task
-
