@@ -21,15 +21,15 @@ const ProjectCard = ({ project }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 dark:shadow-gray-700 dark:hover:shadow-gray-600">
       <div className="p-6">
         <div className="flex justify-between items-start">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             {project.name}
           </h3>
           <button
             onClick={handleDeleteProject}
-            className="text-gray-400 hover:text-red-500 transition-colors"
+            className="text-gray-400 hover:text-red-500 transition-colors dark:text-gray-500 dark:hover:text-red-400"
           >
             <svg
               className="w-5 h-5"
@@ -49,16 +49,18 @@ const ProjectCard = ({ project }) => {
         </div>
 
         {project.description && (
-          <p className="mt-2 text-gray-600 text-sm">{project.description}</p>
+          <p className="mt-2 text-gray-600 text-sm dark:text-gray-400">
+            {project.description}
+          </p>
         )}
 
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             Created {formatDate(project.createdAt)}
           </span>
           <button
             onClick={handleViewProject}
-            className="px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-md hover:bg-indigo-200 transition"
+            className="px-3 py-1 bg-indigo-100 text-indigo-700 text-sm rounded-md hover:bg-indigo-200 transition dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800"
           >
             View
           </button>

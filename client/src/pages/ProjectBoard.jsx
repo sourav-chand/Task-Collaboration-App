@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useProject } from "../context/ProjectContext";
+import { useTheme } from "../context/ThemeContext";
 import TaskColumn from "../components/TaskColumn";
 import CreateTaskModal from "../components/CreateTaskModal";
+import ThemeToggle from "../components/ThemeToggle";
 
 const ProjectBoard = () => {
   const { id: projectId } = useParams();
@@ -19,6 +21,7 @@ const ProjectBoard = () => {
     getTasks,
     getProjects,
   } = useProject();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,21 +59,26 @@ const ProjectBoard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white dark:bg-gray-800 shadow dark:shadow-gray-700">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {currentProject?.name || "Project Board"}
             </h1>
-            <p className="text-gray-600">Project ID: {projectId}</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              Project ID: {projectId}
+            </p>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="text-gray-700">Welcome, {user?.name}</span>
+            <ThemeToggle />
+            <span className="text-gray-700 dark:text-gray-300">
+              Welcome, {user?.name}
+            </span>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition"
             >
               Logout
             </button>
@@ -80,7 +88,9 @@ const ProjectBoard = () => {
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-xl font-semibold text-gray-800">Task Board</h2>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+            Task Board
+          </h2>
           <button
             onClick={() => setShowModal(true)}
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition flex items-center"

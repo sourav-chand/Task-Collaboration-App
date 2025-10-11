@@ -11,7 +11,11 @@ const TaskCard = ({ task, projectId }) => {
     assignedTo: task.assignedTo?._id || "",
   });
 
-  const { updateTask, deleteTask } = useProject();
+  const { updateTask, deleteTask, projects } = useProject();
+
+  // Get project members for assignment
+  const currentProject = projects.find((p) => p._id === projectId);
+  const projectMembers = currentProject?.members || [];
 
   const handleUpdate = async () => {
     // Handle empty assignedTo
@@ -42,7 +46,7 @@ const TaskCard = ({ task, projectId }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-md transition-shadow dark:shadow-gray-700 dark:hover:shadow-gray-600">
       {isEditing ? (
         <div>
           <input
@@ -50,35 +54,53 @@ const TaskCard = ({ task, projectId }) => {
             name="title"
             value={editData.title}
             onChange={handleChange}
-            className="w-full font-semibold mb-2 p-2 border rounded"
+            className="w-full font-semibold mb-2 p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
           <textarea
             name="description"
             value={editData.description}
             onChange={handleChange}
             rows="2"
-            className="w-full text-sm text-gray-600 mb-2 p-2 border rounded"
+            className="w-full text-sm text-gray-600 mb-2 p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
           ></textarea>
           <select
             name="status"
             value={editData.status}
             onChange={handleChange}
-            className="w-full text-sm mb-2 p-2 border rounded"
+            className="w-full text-sm mb-2 p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           >
             <option value="To Do">To Do</option>
             <option value="In Progress">In Progress</option>
             <option value="Done">Done</option>
           </select>
+          <div className="mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
+              Assign To
+            </label>
+            <select
+              name="assignedTo"
+              value={editData.assignedTo}
+              onChange={handleChange}
+              className="w-full text-sm p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            >
+              <option value="">Unassigned</option>
+              {projectMembers.map((member) => (
+                <option key={member._id} value={member._id}>
+                  {member.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="flex justify-end space-x-2">
             <button
               onClick={() => setIsEditing(false)}
-              className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded"
+              className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded dark:text-gray-300 dark:hover:bg-gray-700"
             >
               Cancel
             </button>
             <button
               onClick={handleUpdate}
-              className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600"
             >
               Save
             </button>
@@ -87,11 +109,13 @@ const TaskCard = ({ task, projectId }) => {
       ) : (
         <div>
           <div className="flex justify-between">
-            <h4 className="font-semibold text-gray-800">{task.title}</h4>
+            <h4 className="font-semibold text-gray-800 dark:text-white">
+              {task.title}
+            </h4>
             <div className="flex space-x-1">
               <button
                 onClick={() => setIsEditing(true)}
-                className="text-gray-400 hover:text-indigo-600"
+                className="text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400"
               >
                 <svg
                   className="w-4 h-4"
@@ -110,7 +134,7 @@ const TaskCard = ({ task, projectId }) => {
               </button>
               <button
                 onClick={handleDelete}
-                className="text-gray-400 hover:text-red-600"
+                className="text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400"
               >
                 <svg
                   className="w-4 h-4"
@@ -131,11 +155,13 @@ const TaskCard = ({ task, projectId }) => {
           </div>
 
           {task.description && (
-            <p className="text-sm text-gray-600 mt-2">{task.description}</p>
+            <p className="text-sm text-gray-600 mt-2 dark:text-gray-400">
+              {task.description}
+            </p>
           )}
 
           <div className="mt-4 flex items-center justify-between">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
               {task.status}
             </span>
 
@@ -144,11 +170,14 @@ const TaskCard = ({ task, projectId }) => {
                 <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs">
                   {getInitials(task.assignedTo.name)}
                 </div>
+                <span className="ml-2 text-xs text-gray-600 dark:text-gray-400">
+                  {task.assignedTo.name}
+                </span>
               </div>
             )}
           </div>
 
-          <div className="mt-3 text-xs text-gray-500">
+          <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
             Created {formatDate(task.createdAt)}
           </div>
         </div>

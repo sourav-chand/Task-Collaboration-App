@@ -72,6 +72,17 @@ export const ProjectProvider = ({ children }) => {
     }
   }, []);
 
+  const getAssignedTasks = useCallback(async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/tasks/assigned`
+      );
+      return { success: true, tasks: res.data };
+    } catch (err) {
+      return { success: false, error: "Failed to fetch assigned tasks" };
+    }
+  }, []);
+
   const createTask = useCallback(async (projectId, taskData) => {
     try {
       const res = await axios.post(
@@ -125,6 +136,7 @@ export const ProjectProvider = ({ children }) => {
     getProjects,
     deleteProject,
     getTasks,
+    getAssignedTasks,
     createTask,
     updateTask,
     deleteTask,

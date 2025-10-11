@@ -32,6 +32,18 @@ router.post(
 
       const { title, description, assignedTo, status } = req.body;
 
+      // Validate assignedTo is a member of the project if provided
+      if (assignedTo) {
+        const isMember = project.members.some(
+          (member) => member.toString() === assignedTo
+        );
+        if (!isMember) {
+          return res
+            .status(400)
+            .json({ msg: "Assigned user must be a project member" });
+        }
+      }
+
       // Handle empty assignedTo
       const assignedToValue =
         assignedTo && assignedTo.trim() !== "" ? assignedTo : undefined;
@@ -61,7 +73,7 @@ router.post(
   }
 );
 
-// @route   GET /api/projects/:id/tasks
+// @route   GET /api/projects/:project_id/tasks
 // @desc    Get all tasks for a project
 // @access  Private
 router.get("/:project_id/tasks", auth, async (req, res) => {
@@ -72,8 +84,14 @@ router.get("/:project_id/tasks", auth, async (req, res) => {
       return res.status(404).json({ msg: "Project not found" });
     }
 
-    // Check if user is part of the project
-    if (!project.members.includes(req.user.id)) {
+    // Check if user is part of the project or has assigned tasks in this project
+    const isProjectMember = project.members.includes(req.user.id);
+    const hasAssignedTasks = await Task.exists({
+      project: req.params.project_id,
+      assignedTo: req.user.id,
+    });
+
+    if (!isProjectMember && !hasAssignedTasks) {
       return res.status(401).json({ msg: "User not authorized" });
     }
 
@@ -92,6 +110,23 @@ router.get("/:project_id/tasks", auth, async (req, res) => {
   }
 });
 
+// @route   GET /api/tasks/assigned
+// @desc    Get all tasks assigned to the authenticated user
+// @access  Private
+router.get("/assigned", auth, async (req, res) => {
+  try {
+    const tasks = await Task.find({ assignedTo: req.user.id })
+      .populate("assignedTo", "name")
+      .populate("project", "name")
+      .sort({ date: -1 });
+
+    res.json(tasks);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+});
+
 // @route   PUT /api/tasks/:id
 // @desc    Update a task
 // @access  Private
@@ -104,7 +139,8 @@ router.put("/:id", auth, async (req, res) => {
     if (title) taskFields.title = title;
     if (description) taskFields.description = description;
     if (status) taskFields.status = status;
-    // Handle empty assignedTo
+
+    // Handle assignedTo field
     if (assignedTo !== undefined) {
       taskFields.assignedTo =
         assignedTo && assignedTo.trim() !== "" ? assignedTo : undefined;
@@ -116,10 +152,26 @@ router.put("/:id", auth, async (req, res) => {
       return res.status(404).json({ msg: "Task not found" });
     }
 
-    // Check if user is part of the project
+    // Check if user is part of the project or is assigned to the task
     const project = await Project.findById(task.project);
-    if (!project.members.includes(req.user.id)) {
+    const isProjectMember = project.members.includes(req.user.id);
+    const isAssignedToTask =
+      task.assignedTo && task.assignedTo.toString() === req.user.id;
+
+    if (!isProjectMember && !isAssignedToTask) {
       return res.status(401).json({ msg: "User not authorized" });
+    }
+
+    // Validate assignedTo is a member of the project if provided
+    if (assignedTo) {
+      const isMember = project.members.some(
+        (member) => member.toString() === assignedTo
+      );
+      if (!isMember) {
+        return res
+          .status(400)
+          .json({ msg: "Assigned user must be a project member" });
+      }
     }
 
     task = await Task.findByIdAndUpdate(
@@ -153,9 +205,14 @@ router.delete("/:id", auth, async (req, res) => {
       return res.status(404).json({ msg: "Task not found" });
     }
 
-    // Check if user is part of the project
+    // Check if user is part of the project or is assigned to the task
     const project = await Project.findById(task.project);
-    if (!project.members.includes(req.user.id)) {
+    const isProjectMember = project.members.includes(req.user.id);
+    const isAssignedToTask =
+      task.assignedTo && task.assignedTo.toString() === req.user.id;
+    const isProjectOwner = project.owner.toString() === req.user.id;
+
+    if (!isProjectMember && !isAssignedToTask && !isProjectOwner) {
       return res.status(401).json({ msg: "User not authorized" });
     }
 

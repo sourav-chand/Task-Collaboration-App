@@ -46,10 +46,20 @@ router.post(
 // @access  Private
 router.get("/", auth, async (req, res) => {
   try {
+    // Find projects where user is owner, member, or has assigned tasks
+    const projectsWithAssignedTasks = await Task.find({
+      assignedTo: req.user.id,
+    }).distinct("project");
+
     const projects = await Project.find({
-      $or: [{ owner: req.user.id }, { members: req.user.id }],
+      $or: [
+        { owner: req.user.id },
+        { members: req.user.id },
+        { _id: { $in: projectsWithAssignedTasks } },
+      ],
     })
       .populate("owner", "name")
+      .populate("members", "name email") // Populate members with name and email
       .sort({ date: -1 });
 
     res.json(projects);
