@@ -127,8 +127,8 @@ task-collaboration-app/
 
 ### Tasks
 
-- `POST /api/projects/:id/tasks` - Create a new task
-- `GET /api/projects/:id/tasks` - Get all tasks for a project
+- `POST /api/tasks/:id/tasks` - Create a new task
+- `GET /api/tasks/:id/tasks` - Get all tasks for a project
 - `PUT /api/tasks/:id` - Update a task
 - `DELETE /api/tasks/:id` - Delete a task
 
