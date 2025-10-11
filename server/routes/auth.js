@@ -1,9 +1,9 @@
-import express from "express";
-import { body, validationResult } from "express-validator";
-import jwt from "jsonwebtoken";
-import User from "../models/User.js";
-import auth from "../middleware/auth.js";
-import mongoose from "mongoose";
+const express = require("express");
+const { body, validationResult } = require("express-validator");
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const auth = require("../middleware/auth");
+const mongoose = require("mongoose");
 
 const router = express.Router();
 
@@ -45,7 +45,7 @@ router.post(
     try {
       // Check if user already exists
       console.log("Checking if user already exists...");
-      let user = await User.findOne({ email }).maxTimeMS(30000);
+       let user = await User.findOne({ email });
       if (user) {
         console.log("User already exists with email:", email);
         return res
@@ -117,7 +117,7 @@ router.post(
 
     try {
       // Check if user exists
-      let user = await User.findOne({ email }).maxTimeMS(30000);
+      let user = await User.findOne({ email });
       if (!user) {
         return res
           .status(400)
@@ -168,4 +168,4 @@ router.get("/user", [checkDBConnection, auth], async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
