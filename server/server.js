@@ -15,7 +15,13 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://task-collaboration-app-sxhh.vercel.app"], // your frontend URL
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true, // if you're using cookies or authentication headers
+  })
+);
 app.use(express.json());
 
 // Routes
