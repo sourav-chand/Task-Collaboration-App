@@ -1,15 +1,15 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const dotenv = require("dotenv");
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config();
 
 // Import routes
-const authRoutes = require("./routes/auth");
-const projectRoutes = require("./routes/projects");
-const taskRoutes = require("./routes/tasks");
+import authRoutes from "./routes/auth.js";
+import projectRoutes from "./routes/projects.js";
+import taskRoutes from "./routes/tasks.js";
 
 // Initialize app
 const app = express();
@@ -93,4 +93,4 @@ mongoose.connection.on("reconnected", () => {
   console.log("MongoDB reconnected");
 });
 
-module.exports = { app };
+export { app };
