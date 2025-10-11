@@ -18,6 +18,59 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// MongoDB connection with improved error handling
+const connectDB = async () => {
+  try {
+    if (!process.env.MONGO_URI) {
+      throw new Error("MONGO_URI is not defined in environment variables");
+    }
+
+    console.log("Attempting to connect to MongoDB...");
+    console.log("MONGO_URI:", process.env.MONGO_URI);
+
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000, // Increase server selection timeout
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+    });
+
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log("Connection state:", mongoose.connection.readyState);
+    return conn;
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    throw error;
+  }
+};
+
+// Connect to MongoDB
+connectDB().catch((err) => {
+  console.error("Failed to connect to MongoDB:", err);
+});
+
+// Connection event handlers
+mongoose.connection.on("connecting", () => {
+  console.log("MongoDB connecting...");
+});
+
+mongoose.connection.on("connected", () => {
+  console.log("MongoDB connected successfully");
+});
+
+mongoose.connection.on("disconnected", () => {
+  console.log("MongoDB disconnected. Retrying connection...");
+  setTimeout(connectDB, 5000); // Retry after 5 seconds
+});
+
+mongoose.connection.on("error", (err) => {
+  console.error("MongoDB connection error:", err);
+});
+
+mongoose.connection.on("reconnected", () => {
+  console.log("MongoDB reconnected");
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
