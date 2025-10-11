@@ -18,11 +18,32 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// MongoDB connection with improved error handling
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    process.exit(1); // Exit process with failure
+  }
+};
+
 // Connect to MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log("MongoDB connection error:", err));
+connectDB();
+
+// Retry connection on error
+mongoose.connection.on("disconnected", () => {
+  console.log("MongoDB disconnected. Retrying connection...");
+  setTimeout(connectDB, 5000); // Retry after 5 seconds
+});
+
+mongoose.connection.on("error", (err) => {
+  console.error("MongoDB connection error:", err);
+});
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -49,7 +70,8 @@ const server = app.listen(PORT, () => {
 // Socket.io setup
 const io = require("socket.io")(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin:
+      process.env.NODE_ENV === "production" ? false : "http://localhost:5173",
     methods: ["GET", "POST"],
   },
 });
