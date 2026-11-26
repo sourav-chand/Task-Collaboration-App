@@ -5,8 +5,8 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node init && node server.js",
-    "dev": "node init && nodemon server.js",
+    "start": "node node server.js",
+    "dev": "node nodemon server.js",
     "test": "jest",
     "test-structure": "node test-structure.js"
   },
